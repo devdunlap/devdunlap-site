@@ -1,8 +1,13 @@
-# devdunlap.site — The Ops Console
+# devdunlap.site
 
-Andrew Dunlap's consulting site, designed as a live operations console.
-Static single-page site (plain HTML/CSS/JS, no build step): Overview, Services
-(DevOps / ClickOps / AI-assisted delivery with Claude), Field Logs, About.
+Andrew Dunlap's consulting site — kept in two versions so the site itself
+demonstrates a blue-green deployment:
+
+- **`blue/`** — the original dark "Ops Console" design (terminal-style,
+  single file, Overview / Services / Field Logs / About).
+- **`green/`** — the editorial redesign: hand-coded HTML/CSS, first-person
+  copy, real photo, services as a priced list.
+
 Target: small and mid-sized businesses that want enterprise-level talent.
 
 Live at https://devdunlap.site (Cloudflare Pages).
@@ -28,13 +33,29 @@ python3 scripts/check_site.py
 
 ## Deploy
 
-Deploys are manual on purpose: in the Actions tab, run the CI workflow
-and tick **deploy**. After the checks pass it ships `index.html` to
-Cloudflare Pages with Wrangler and smoke-tests the live pages.dev URL.
-Requires the repository secrets `CLOUDFLARE_API_TOKEN` and
-`CLOUDFLARE_ACCOUNT_ID`. Day-to-day, the site is redeployed with a
-one-command helper; this job exists so the full path — check, ship,
-verify — is visible in one place.
+## Deploy — blue-green
+
+Each colour has its own Cloudflare Pages project (its slot), and
+production is a third:
+
+| Slot | Folder | Pages project | URL |
+| --- | --- | --- | --- |
+| Blue | `blue/` | `devdunlap-site-blue` | https://devdunlap-site-blue.pages.dev |
+| Green | `green/` | `devdunlap-site-green` | https://devdunlap-site-green.pages.dev |
+| Production | — | `devdunlap-site` | https://devdunlap.site |
+
+Deploys are manual on purpose, from the Actions tab, using the
+**Blue-Green Deploy** workflow (`.github/workflows/blue-green.yml`):
+
+- **deploy-slot** ships one colour's folder to its own slot project and
+  smoke-tests the slot URL.
+- **promote** copies that colour's folder into the production project —
+  that copy is the traffic switch. Rollback is promoting the other
+  colour back.
+
+Nothing deploys on push; every move is a deliberate button press, which
+is the point of the demo. Requires the repository secrets
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
 ## Infrastructure as code
 
