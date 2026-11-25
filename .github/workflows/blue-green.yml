@@ -1,0 +1,96 @@
+name: Blue-Green Deploy
+
+# Blue-green deployment for devdunlap.site, run by hand from the
+# Actions tab. Two versions of the site live in this repo:
+#
+#   blue/   the original dark "Ops Console" design
+#   green/  the editorial redesign
+#
+# Each colour has its own Cloudflare Pages project (its "slot"):
+#
+#   blue  -> devdunlap-site-blue   (devdunlap-site-blue.pages.dev)
+#   green -> devdunlap-site-green  (devdunlap-site-green.pages.dev)
+#
+# Production (devdunlap.site) is a third project, devdunlap-site.
+# "Promoting" a colour copies that colour's files into production —
+# that copy is the traffic switch. Rollback is promoting the other
+# colour back. Nothing here deploys on push; every move is a
+# deliberate button press, which is the point of the demo.
+#
+# Needs repository secrets CLOUDFLARE_API_TOKEN and
+# CLOUDFLARE_ACCOUNT_ID (already configured for the CI workflow).
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do"
+        type: choice
+        options:
+          - deploy-slot
+          - promote
+        default: deploy-slot
+      slot:
+        description: "Which colour"
+        type: choice
+        options:
+          - blue
+          - green
+        default: green
+
+permissions:
+  contents: read
+
+jobs:
+  blue-green:
+    name: ${{ inputs.action }} (${{ inputs.slot }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Run site checks first
+        run: python3 scripts/check_site.py
+
+      - name: Resolve slot, project and smoke-test target
+        id: cfg
+        run: |
+          case "${{ inputs.slot }}" in
+            blue)  SMOKE_TEXT="Ops Console" ;;
+            green) SMOKE_TEXT="keep production systems up" ;;
+          esac
+          if [ "${{ inputs.action }}" = "promote" ]; then
+            PROJECT="devdunlap-site"
+            URL="https://devdunlap.site/"
+          else
+            PROJECT="devdunlap-site-${{ inputs.slot }}"
+            URL="https://devdunlap-site-${{ inputs.slot }}.pages.dev/"
+          fi
+          echo "project=$PROJECT" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "smoke=$SMOKE_TEXT" >> "$GITHUB_OUTPUT"
+          echo "Deploying ${{ inputs.slot }}/ to $PROJECT (smoke: $URL)"
+
+      - name: Stage the slot's files
+        run: |
+          mkdir -p dist
+          cp -r "${{ inputs.slot }}/." dist/
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ steps.cfg.outputs.project }} --branch=main
+
+      - name: Smoke test the deployed URL
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS "${{ steps.cfg.outputs.url }}" | grep -q "${{ steps.cfg.outputs.smoke }}"; then
+              echo "Smoke test passed: ${{ steps.cfg.outputs.url }} is serving the ${{ inputs.slot }} version."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Smoke test failed: expected content not found at ${{ steps.cfg.outputs.url }}"
+          exit 1

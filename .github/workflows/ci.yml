@@ -5,10 +5,7 @@ name: CI
 #                     hygiene and a page-weight budget (scripts/check_site.py)
 #   2. terraform    — the Cloudflare infrastructure as code is formatted
 #                     and valid (infra/)
-#   3. deploy       — MANUAL ONLY (Actions tab -> CI -> Run workflow, tick
-#                     "deploy"): ships index.html to Cloudflare Pages and
-#                     smoke-tests the live URL. Needs the repository
-#                     secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+#   Deployments live in blue-green.yml (manual, slot-based).
 
 on:
   push:
@@ -16,11 +13,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      deploy:
-        description: "Deploy to Cloudflare Pages after checks pass"
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -71,37 +63,3 @@ jobs:
 
       - name: Validate
         run: terraform validate
-
-  deploy:
-    name: Deploy to Cloudflare Pages (manual)
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy
-    needs: [site-checks, terraform]
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-
-      - name: Stage only the site file
-        run: |
-          mkdir -p dist
-          cp index.html dist/index.html
-
-      - name: Deploy with Wrangler
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=devdunlap-site --branch=main
-
-      - name: Smoke test the live site
-        run: |
-          for i in 1 2 3 4 5; do
-            if curl -fsS https://devdunlap-site.pages.dev/ | grep -qi "Ops Console"; then
-              echo "Live site responded with the expected content."
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "Live site did not return the expected content."
-          exit 1
