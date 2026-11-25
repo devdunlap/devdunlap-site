@@ -16,7 +16,13 @@ import sys
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INDEX = os.path.join(ROOT, "index.html")
+# Blue-green layout: each version lives in its own folder and is checked
+# the same way. Blue is the original Ops Console design, green is the
+# editorial redesign.
+VERSIONS = [
+    ("blue", os.path.join(ROOT, "blue", "index.html")),
+    ("green", os.path.join(ROOT, "green", "index.html")),
+]
 SIZE_BUDGET_BYTES = 100 * 1024  # the whole pitch of a static site is "instant"
 
 VOID_ELEMENTS = {
@@ -87,23 +93,24 @@ class SiteParser(HTMLParser):
             self.title_parts.append(data)
 
 
-def main():
-    if not os.path.isfile(INDEX):
-        check("index.html exists at repo root", False, INDEX)
+def run_checks(label, index_path):
+    base = os.path.dirname(index_path)
+    if not os.path.isfile(index_path):
+        check(f"[{label}] index.html exists", False, index_path)
         return 1
-    check("index.html exists at repo root", True)
+    check(f"[{label}] index.html exists", True)
 
-    raw = open(INDEX, "rb").read()
+    raw = open(index_path, "rb").read()
     html = raw.decode("utf-8", errors="replace")
     size = len(raw)
-    check(f"page weight within budget ({size:,} / {SIZE_BUDGET_BYTES:,} bytes)",
+    check(f"[{label}] page weight within budget ({size:,} / {SIZE_BUDGET_BYTES:,} bytes)",
           size <= SIZE_BUDGET_BYTES)
 
-    check("DOCTYPE html declared", html.lstrip().lower().startswith("<!doctype html"))
-    check('<html lang="..."> set', bool(re.search(r'<html[^>]+lang="[a-zA-Z-]+"', html)))
-    check("meta viewport present", 'name="viewport"' in html)
+    check(f"[{label}] DOCTYPE html declared", html.lstrip().lower().startswith("<!doctype html"))
+    check(f'[{label}] <html lang="..."> set', bool(re.search(r'<html[^>]+lang="[a-zA-Z-]+"', html)))
+    check(f"[{label}] meta viewport present", 'name="viewport"' in html)
     desc = re.search(r'<meta[^>]+name="description"[^>]+content="([^"]*)"', html)
-    check("meta description present and meaningful (>= 50 chars)",
+    check(f"[{label}] meta description present and meaningful (>= 50 chars)",
           bool(desc) and len(desc.group(1)) >= 50,
           f"{len(desc.group(1)) if desc else 0} chars")
 
@@ -111,36 +118,42 @@ def main():
     parser.feed(html)
     leftover = [t for t in parser.stack if t not in OPTIONAL_CLOSE]
     balance_problems = parser.balance_errors + [f"<{t}> never closed" for t in leftover]
-    check("HTML tags balanced", not balance_problems, "; ".join(balance_problems[:3]))
+    check(f"[{label}] HTML tags balanced", not balance_problems, "; ".join(balance_problems[:3]))
 
     title = "".join(parser.title_parts).strip()
-    check("<title> present and non-empty", len(title) >= 8, title[:60])
+    check(f"[{label}] <title> present and non-empty", len(title) >= 8, title[:60])
 
     dupes = sorted({i for i in parser.ids if parser.ids.count(i) > 1})
-    check("element ids are unique", not dupes, ", ".join(dupes))
+    check(f"[{label}] element ids are unique", not dupes, ", ".join(dupes))
 
-    missing = [r for r in parser.local_refs if not os.path.exists(os.path.join(ROOT, r))]
-    check("local file references exist", not missing, ", ".join(missing))
+    missing = [r for r in parser.local_refs if not os.path.exists(os.path.join(base, r))]
+    check(f"[{label}] local file references exist", not missing, ", ".join(missing))
 
     id_set = set(parser.ids)
     broken_anchors = [h for h, _ in parser.links
                       if h.startswith("#") and len(h) > 1 and h[1:] not in id_set]
-    check("in-page anchor targets exist", not broken_anchors, ", ".join(broken_anchors))
+    check(f"[{label}] in-page anchor targets exist", not broken_anchors, ", ".join(broken_anchors))
 
     imgs_without_alt = [i.get("src", "?") for i in parser.imgs if not i.get("alt")]
-    check("every <img> has alt text", not imgs_without_alt, ", ".join(imgs_without_alt))
+    check(f"[{label}] every <img> has alt text", not imgs_without_alt, ", ".join(imgs_without_alt))
 
     blank_without_noopener = [
         h for h, a in parser.links
         if a.get("target") == "_blank" and "noopener" not in a.get("rel", "")
     ]
-    check('target="_blank" links carry rel="noopener"',
+    check(f'[{label}] target="_blank" links carry rel="noopener"',
           not blank_without_noopener, ", ".join(blank_without_noopener))
 
-    check("no insecure http:// URLs", "http://" not in html)
-    check("no inline onclick handlers", not re.search(r"\sonclick\s*=", html, re.I))
-    check("no placeholder text (lorem ipsum / TODO)",
+    check(f"[{label}] no insecure http:// URLs", "http://" not in html)
+    check(f"[{label}] no inline onclick handlers", not re.search(r"\sonclick\s*=", html, re.I))
+    check(f"[{label}] no placeholder text (lorem ipsum / TODO)",
           not re.search(r"lorem ipsum|\bTODO\b", html, re.I))
+    return 0
+
+
+def main():
+    for label, path in VERSIONS:
+        run_checks(label, path)
 
     failed = [r for r in results if not r[1]]
     print(f"\n{len(results) - len(failed)}/{len(results)} checks passed")
