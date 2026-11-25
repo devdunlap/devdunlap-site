@@ -1,0 +1,107 @@
+name: CI
+
+# Simple, interview-friendly pipeline for a no-build static site:
+#   1. site-checks  — structure, links, accessibility basics, security
+#                     hygiene and a page-weight budget (scripts/check_site.py)
+#   2. terraform    — the Cloudflare infrastructure as code is formatted
+#                     and valid (infra/)
+#   3. deploy       — MANUAL ONLY (Actions tab -> CI -> Run workflow, tick
+#                     "deploy"): ships index.html to Cloudflare Pages and
+#                     smoke-tests the live URL. Needs the repository
+#                     secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy to Cloudflare Pages after checks pass"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the older run — CI minutes are
+# not spent validating code nobody is looking at anymore.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site-checks:
+    name: Static site checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run site checks
+        run: python3 scripts/check_site.py
+
+  terraform:
+    name: Terraform IaC checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: Format check
+        run: terraform fmt -check -diff -recursive
+
+      - name: Init (no backend, no credentials)
+        run: terraform init -backend=false
+
+      - name: Validate
+        run: terraform validate
+
+  deploy:
+    name: Deploy to Cloudflare Pages (manual)
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy
+    needs: [site-checks, terraform]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Stage only the site file
+        run: |
+          mkdir -p dist
+          cp index.html dist/index.html
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=devdunlap-site --branch=main
+
+      - name: Smoke test the live site
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -fsS https://devdunlap-site.pages.dev/ | grep -qi "Ops Console"; then
+              echo "Live site responded with the expected content."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Live site did not return the expected content."
+          exit 1
