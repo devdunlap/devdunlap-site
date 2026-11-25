@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Andrew Dunlap — Site Reliability &amp; DevOps, Dallas TX</title>
+<meta name="description" content="Andrew Dunlap is a site reliability and DevOps engineer in Dallas, Texas. Eight years keeping production systems up — AWS, Kubernetes, Terraform, and Python automation. Fixed-scope audits and builds for small and mid-size teams.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Hand-coded, one file, no framework. Colours pulled from a paper
+     notebook and a green highlighter, not a design system. */
+  :root {
+    --paper: #faf7f1;
+    --ink: #1e1b16;
+    --ink-soft: #57534a;
+    --rule: #ddd5c5;
+    --green: #1d6a4a;
+    --green-dark: #14503a;
+    --card: #f3eee3;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Inter", -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3, .serif { font-family: "Fraunces", Georgia, serif; }
+  a { color: var(--green-dark); text-underline-offset: 3px; }
+  a:hover { color: var(--green); }
+
+  /* masthead */
+  .masthead {
+    display: flex; align-items: baseline; gap: 28px; flex-wrap: wrap;
+    padding: 26px 0 20px; border-bottom: 2px solid var(--ink);
+  }
+  .masthead .name { font-family: "Fraunces", Georgia, serif; font-size: 26px; font-weight: 700; }
+  .masthead .name a { color: var(--ink); text-decoration: none; }
+  .masthead nav { margin-left: auto; display: flex; gap: 22px; flex-wrap: wrap; }
+  .masthead nav a { color: var(--ink); text-decoration: none; font-size: 15px; font-weight: 500; }
+  .masthead nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .masthead .place { color: var(--ink-soft); font-size: 14px; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 1.9fr 1fr; gap: 48px; padding: 56px 0 8px; }
+  .overline {
+    font-size: 13px; letter-spacing: 2.2px; font-weight: 600;
+    color: var(--green-dark); text-transform: uppercase; margin: 0 0 18px;
+  }
+  .hero h1 { font-size: clamp(34px, 5vw, 54px); line-height: 1.12; margin: 0 0 22px; font-weight: 700; }
+  .hero h1 em { font-style: italic; color: var(--green-dark); }
+  .lede { font-size: 19px; color: var(--ink-soft); margin: 0 0 28px; max-width: 34em; }
+  .lede strong { color: var(--ink); }
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    display: inline-block; padding: 12px 22px; border-radius: 6px;
+    font-weight: 600; font-size: 16px; text-decoration: none;
+  }
+  .btn-solid { background: var(--green); color: #fff; }
+  .btn-solid:hover { background: var(--green-dark); color: #fff; }
+  .btn-line { border: 1.5px solid var(--ink); color: var(--ink); }
+  .btn-line:hover { background: var(--ink); color: var(--paper); }
+  .profile-links { margin-top: 22px; font-size: 15px; color: var(--ink-soft); }
+  .profile-links a { font-weight: 500; }
+  figure.portrait { margin: 6px 0 0; }
+  figure.portrait img {
+    width: 100%; max-width: 300px; border-radius: 8px; display: block;
+    border: 1px solid var(--rule);
+  }
+  figure.portrait figcaption { font-size: 14px; color: var(--ink-soft); margin-top: 10px; font-style: italic; }
+
+  /* facts strip — a ruled list, not cards */
+  .facts {
+    display: flex; gap: 0; flex-wrap: wrap; margin: 48px 0 0;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    padding: 14px 0; font-size: 15px;
+  }
+  .facts span { padding: 2px 18px 2px 0; margin-right: 18px; border-right: 1px solid var(--rule); }
+  .facts span:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+  .facts b { font-weight: 600; }
+
+  /* sections */
+  section { padding: 54px 0 6px; }
+  .kicker { font-size: 13px; letter-spacing: 2.2px; font-weight: 600; text-transform: uppercase; color: var(--green-dark); margin: 0 0 10px; }
+  section h2 { font-size: clamp(26px, 3.4vw, 36px); margin: 0 0 14px; line-height: 1.2; }
+  .section-intro { color: var(--ink-soft); max-width: 44em; margin: 0 0 10px; }
+
+  /* work entries */
+  .work-item { display: grid; grid-template-columns: 54px 1fr; gap: 20px; padding: 26px 0; border-top: 1px solid var(--rule); }
+  .work-item:last-child { border-bottom: 1px solid var(--rule); }
+  .work-num { font-family: "Fraunces", Georgia, serif; font-size: 30px; color: var(--green); line-height: 1; padding-top: 4px; }
+  .work-item h3 { font-size: 22px; margin: 0 0 8px; }
+  .work-item p { margin: 0 0 10px; color: var(--ink-soft); max-width: 46em; }
+  .work-item p strong { color: var(--ink); }
+  .work-links { font-size: 15px; }
+
+  /* services price list */
+  .price-list { margin-top: 12px; }
+  .price-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px 30px;
+    padding: 20px 0; border-top: 1px solid var(--rule); align-items: baseline;
+  }
+  .price-row:last-child { border-bottom: 1px solid var(--rule); }
+  .price-row h3 { font-size: 20px; margin: 0 0 4px; }
+  .price-row p { margin: 0; color: var(--ink-soft); font-size: 15.5px; max-width: 44em; }
+  .price { font-family: "Fraunces", Georgia, serif; font-size: 22px; font-weight: 700; white-space: nowrap; }
+  .price small { font-family: "Inter", sans-serif; font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+  .services-note { margin-top: 20px; background: var(--card); border-radius: 8px; padding: 20px 24px; max-width: 52em; }
+  .services-note p { margin: 0; }
+
+  /* how it works */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; margin-top: 16px; }
+  .steps h3 { font-size: 19px; margin: 0 0 8px; }
+  .steps h3 .n { color: var(--green); font-style: italic; margin-right: 6px; }
+  .steps p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
+
+  /* about + contact */
+  .about p { max-width: 44em; color: var(--ink-soft); }
+  .about p strong { color: var(--ink); }
+  .contact { padding-bottom: 20px; }
+  .contact h2 { font-size: clamp(28px, 4vw, 40px); max-width: 18em; }
+  .contact p { color: var(--ink-soft); max-width: 42em; }
+
+  footer {
+    margin-top: 60px; border-top: 2px solid var(--ink); padding: 22px 0 40px;
+    font-size: 14.5px; color: var(--ink-soft);
+    display: flex; gap: 20px; flex-wrap: wrap; align-items: baseline;
+  }
+  footer .right { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+  footer a { color: var(--ink-soft); }
+  .slot { font-weight: 600; color: var(--green-dark); }
+
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 38px; }
+    figure.portrait img { max-width: 220px; }
+    .steps { grid-template-columns: 1fr; }
+    .work-item { grid-template-columns: 38px 1fr; }
+    .facts span { border-right: none; margin-right: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ======= MASTHEAD ======= -->
+  <header class="masthead">
+    <span class="name"><a href="/">Andrew Dunlap</a></span>
+    <span class="place">Dallas, Texas</span>
+    <nav>
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <!-- ======= HERO ======= -->
+  <div class="hero">
+    <div>
+      <p class="overline">Site Reliability &amp; DevOps</p>
+      <h1>I keep production systems up, and automate the work that <em>shouldn&rsquo;t need a human.</em></h1>
+      <p class="lede">I&rsquo;m Andrew Dunlap, a site reliability engineer in Dallas. For the past <strong>eight years</strong> I&rsquo;ve run AWS and Kubernetes platforms for banks and card issuers &mdash; the kind of places where downtime makes the news. Now I bring the same habits to smaller teams: <strong>ship faster, stay up, spend right, stay secure.</strong></p>
+      <div class="cta-row">
+        <a class="btn btn-solid" href="mailto:dev.dunlap.andrew@gmail.com?subject=Project%20inquiry%20—%20devdunlap.site">Email me</a>
+        <a class="btn btn-line" href="https://linktr.ee/devdunlap" target="_blank" rel="noopener">All my links</a>
+      </div>
+      <p class="profile-links">
+        <a href="https://www.upwork.com/freelancers/~01e3fbcad775ae7205" target="_blank" rel="noopener">Upwork</a> &middot;
+        <a href="https://github.com/devdunlap" target="_blank" rel="noopener">GitHub</a> &middot;
+        <a href="https://www.linkedin.com/in/dev-dunlap" target="_blank" rel="noopener">LinkedIn</a> &middot;
+        <a href="https://www.youtube.com/@devdunlap" target="_blank" rel="noopener">YouTube</a>
+      </p>
+    </div>
+    <figure class="portrait">
+      <img src="photo.jpg" alt="Andrew Dunlap, site reliability engineer in Dallas, Texas" width="400" height="400">
+      <figcaption>Andrew Dunlap &mdash; Dallas, TX. Yes, a real person.</figcaption>
+    </figure>
+  </div>
+
+  <!-- ======= FACTS ======= -->
+  <div class="facts">
+    <span><b>8+ years</b> in production</span>
+    <span>AWS &middot; Kubernetes &middot; Terraform</span>
+    <span>Python automation</span>
+    <span>WAF &amp; cloud security</span>
+    <span>CI/CD that ships daily</span>
+  </div>
+
+  <!-- ======= WORK ======= -->
+  <section id="work">
+    <p class="kicker">Selected work</p>
+    <h2>Things I&rsquo;ve built and run</h2>
+    <p class="section-intro">A short list, on purpose. I&rsquo;d rather show you three real things than thirty bullet points.</p>
+
+    <div class="work-item">
+      <div class="work-num">1</div>
+      <div>
+        <h3>The automation that gave a team its Fridays back</h3>
+        <p>At a major card issuer, user onboarding and offboarding was a manual, ticket-driven slog. I wrote Python automation that wired the identity system to the access tooling end to end. <strong>Manual effort dropped about 70%</strong>, and the process stopped depending on any one person remembering the steps.</p>
+        <p class="work-links">Python &middot; identity lifecycle &middot; audit-friendly logging throughout</p>
+      </div>
+    </div>
+
+    <div class="work-item">
+      <div class="work-num">2</div>
+      <div>
+        <h3>Log Parser CLI &mdash; open source</h3>
+        <p>A command-line tool I&rsquo;m building in public: it parses application logs (logback today, syslog and Apache next), deduplicates them, and keeps trace IDs attached so one request can be followed across services. It exists because I got tired of <em>grep</em>-ing through the same incident twice.</p>
+        <p class="work-links">
+          <a href="https://github.com/devdunlap/Log-Parser-CLI" target="_blank" rel="noopener">Code on GitHub</a> &middot;
+          <a href="https://www.youtube.com/@devdunlap" target="_blank" rel="noopener">Build videos on YouTube</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="work-item">
+      <div class="work-num">3</div>
+      <div>
+        <h3>This website</h3>
+        <p>Hand-coded HTML and CSS, no framework, no build step, hosted on Cloudflare. There are two versions of it &mdash; a dark one and this one &mdash; and I switch between them with a blue-green deployment from GitHub, the same pattern I&rsquo;d set up for your team. The whole build is documented on my channel.</p>
+        <p class="work-links">
+          <a href="https://github.com/devdunlap/devdunlap-site" target="_blank" rel="noopener">Site source on GitHub</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= SERVICES ======= -->
+  <section id="services">
+    <p class="kicker">Services</p>
+    <h2>Fixed-scope help, priced up front</h2>
+    <p class="section-intro">Most engagements start with one of the $650 checks. You get a written report of what I found, what it&rsquo;s costing you, and what I&rsquo;d fix first &mdash; whether you hire me for the fix or not.</p>
+
+    <div class="price-list">
+      <div class="price-row">
+        <div>
+          <h3>AWS Cost Check</h3>
+          <p>Two weeks of your AWS bill, reviewed line by line. Idle resources, oversized instances, storage that should have been archived a year ago &mdash; you get the waste list and what each item is worth.</p>
+        </div>
+        <div class="price">$650</div>
+      </div>
+      <div class="price-row">
+        <div>
+          <h3>AWS Security Baseline Check</h3>
+          <p>IAM, network exposure, encryption, and logging, checked against the baseline I used in regulated banking. Findings ranked by how much they actually matter, not by scanner volume.</p>
+        </div>
+        <div class="price">$650</div>
+      </div>
+      <div class="price-row">
+        <div>
+          <h3>AWS / Kubernetes Health Check</h3>
+          <p>A reliability review of what&rsquo;s running: what pages you at 3 a.m., what has no backup, what falls over when one node dies. Written up plainly, in priority order.</p>
+        </div>
+        <div class="price">$650</div>
+      </div>
+      <div class="price-row">
+        <div>
+          <h3>CI/CD Fix / Build</h3>
+          <p>Your pipeline, repaired or built properly: tests that run, deploys you can roll back, and releases that stop being a ceremony. Most teams ship daily within the engagement.</p>
+        </div>
+        <div class="price">$900&ndash;$1,500</div>
+      </div>
+      <div class="price-row">
+        <div>
+          <h3>Centralized Logging, AWS-Native</h3>
+          <p>Every service&rsquo;s logs in one place with Fluent Bit and CloudWatch &mdash; no log servers to babysit. Saved queries and one dashboard your team will actually open during an incident.</p>
+        </div>
+        <div class="price">$1,200</div>
+      </div>
+      <div class="price-row">
+        <div>
+          <h3>Cloud Adoption Starter</h3>
+          <p>A proper AWS landing zone to grow into: account structure, guardrails, network, and identity, set up with Terraform so the second workload is easier than the first.</p>
+        </div>
+        <div class="price">$1,500</div>
+      </div>
+      <div class="price-row">
+        <div>
+          <h3>Ongoing DevOps / ClickOps</h3>
+          <p>A set number of hours each week where I&rsquo;m your platform engineer: releases, incidents, the Terraform nobody wants to touch. Cancel whenever.</p>
+        </div>
+        <div class="price">$60<small> /hr</small></div>
+      </div>
+    </div>
+
+    <div class="services-note">
+      <p><strong>How the money works:</strong> audits are flat-fee and paid up front. Fixes are either a fixed price we agree in writing, or $60/hr with a cap. No hourly billing that quietly becomes a second mortgage.</p>
+    </div>
+  </section>
+
+  <!-- ======= HOW IT WORKS ======= -->
+  <section id="process">
+    <p class="kicker">How it works</p>
+    <h2>Three steps, no mystery</h2>
+    <div class="steps">
+      <div>
+        <h3><span class="n">One.</span>Start with a check</h3>
+        <p>Pick the $650 audit that matches your worry &mdash; cost, security, or reliability. I look at the real system, not a slide deck about it.</p>
+      </div>
+      <div>
+        <h3><span class="n">Two.</span>Fixed scope, in writing</h3>
+        <p>You get a short report and a fix list with prices. What we agree is what gets built &mdash; automation and infrastructure as code, so it stays built.</p>
+      </div>
+      <div>
+        <h3><span class="n">Three.</span>Handover you can run</h3>
+        <p>Everything ships with notes your team can follow at 3 a.m. without me. If you want me on call after that, the weekly option covers it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= ABOUT ======= -->
+  <section id="about" class="about">
+    <p class="kicker">About</p>
+    <h2>The short version</h2>
+    <p>By day I&rsquo;m a site reliability engineer at <strong>a major U.S. financial institution</strong>. Before that I worked on web application firewall tooling at a card issuer, and spent seven years at a Dallas IT firm growing from cloud engineer to lead DevOps engineer. The through-line: <strong>production systems, and the automation that keeps them boring.</strong></p>
+    <p>On the side I&rsquo;m building toward forward deployed engineering &mdash; the customer-embedded kind of role where you ship working software into real operations instead of handing over a report. The <strong>Dev Dunny</strong> channel (new videos Tuesday and Friday) is where I document that build, including this site.</p>
+  </section>
+
+  <!-- ======= CONTACT ======= -->
+  <section id="contact" class="contact">
+    <p class="kicker">Contact</p>
+    <h2>Tell me what&rsquo;s running, what&rsquo;s breaking, or what you&rsquo;re afraid will break.</h2>
+    <p>The first conversation is a working session, not a sales call. You&rsquo;ll leave with a clear read on your system either way &mdash; that&rsquo;s the deal.</p>
+    <div class="cta-row">
+      <a class="btn btn-solid" href="mailto:dev.dunlap.andrew@gmail.com?subject=Project%20inquiry%20—%20devdunlap.site">Email me</a>
+      <a class="btn btn-line" href="https://www.upwork.com/freelancers/~01e3fbcad775ae7205" target="_blank" rel="noopener">Hire me on Upwork</a>
+    </div>
+  </section>
+
+  <footer>
+    <span>&copy; 2026 Andrew Dunlap &middot; Dallas, TX &middot; <span class="slot">Green version</span> &mdash; hand-coded, no templates.</span>
+    <span class="right">
+      <a href="https://github.com/devdunlap" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linktr.ee/devdunlap" target="_blank" rel="noopener">Linktree</a>
+      <a href="https://www.youtube.com/@devdunlap" target="_blank" rel="noopener">YouTube</a>
+      <a href="mailto:dev.dunlap.andrew@gmail.com">Email</a>
+    </span>
+  </footer>
+
+</div>
+</body>
+</html>
