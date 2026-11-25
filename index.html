@@ -377,15 +377,15 @@
               <div class="panel-head">svc · devops-sre <span class="right tag-ok">● HEALTHY</span></div>
               <div class="svc-body">
                 <h3>DevOps &amp; Site Reliability</h3>
-                <p>The full discipline: infrastructure as code, CI/CD pipelines, Kubernetes, and observability — built so your system pages me never, and recovers fast when it matters.</p>
+                <p>The full discipline: infrastructure as code, CI/CD pipelines, Kubernetes, and observability — ship faster, stay up, and hear about problems before your customers do.</p>
                 <ul>
                   <li>AWS architecture &amp; Terraform IaC</li>
                   <li>CI/CD pipelines that don't break on Fridays</li>
-                  <li>Datadog / Splunk logging &amp; alerting</li>
+                  <li>CloudWatch-native logging &amp; observability</li>
                   <li>Incident-hardening &amp; reliability reviews</li>
                 </ul>
                 <div class="foot">
-                  <span class="price">from <b>$650</b> · health check</span>
+                  <span class="price">audits from <b>$650</b></span>
                   <button class="link-arrow" data-goto="services" style="background:none;border:0;color:var(--signal);cursor:pointer;font-family:var(--mono);padding:10px 4px;">Details →</button>
                 </div>
               </div>
@@ -461,8 +461,18 @@
           <div class="panel pkg">
             <div class="pkg-row head"><span>Package</span><span>What you get</span><span style="text-align:right;">Fixed price</span></div>
             <div class="pkg-row">
+              <span class="pkg-name">AWS Cost Check</span>
+              <span class="pkg-desc">Know where the money goes. I map one AWS account's spend, hand you the waste list — idle, oversized, and orphaned resources — with a savings estimate, and leave budgets and cost alerts switched on so the bill stops surprising you.</span>
+              <span class="pkg-price">$650</span>
+            </div>
+            <div class="pkg-row">
+              <span class="pkg-name">AWS Security Baseline Check</span>
+              <span class="pkg-desc">The basics, checked before they're headlines: MFA and IAM hygiene, public storage, encryption, and audit logging, measured against the standard baseline and delivered as a prioritized fix list.</span>
+              <span class="pkg-price">$650</span>
+            </div>
+            <div class="pkg-row">
               <span class="pkg-name">AWS / Kubernetes Health Check</span>
-              <span class="pkg-desc">A senior engineer's audit of your cloud and cluster setup — reliability risks, cost leaks, and security gaps, delivered as a prioritized fix list you can act on with or without me.</span>
+              <span class="pkg-desc">A senior engineer's audit of your cloud and cluster setup — the reliability and uptime risks that page you at the worst moment, delivered as a prioritized fix list you can act on with or without me.</span>
               <span class="pkg-price">$650</span>
             </div>
             <div class="pkg-row">
@@ -471,9 +481,14 @@
               <span class="pkg-price">$900–$1,500</span>
             </div>
             <div class="pkg-row">
-              <span class="pkg-name">Centralized Logging Starter</span>
-              <span class="pkg-desc">Your logs in one searchable place (ELK-based), with parsing pipelines and the first alerts that actually mean something. The foundation every growing system needs.</span>
+              <span class="pkg-name">Centralized Logging, AWS-Native</span>
+              <span class="pkg-desc">Your logs in one searchable place the AWS-native way: Fluent Bit shipping to CloudWatch Logs, with Logs Insights queries and dashboards set up for the questions you actually ask — and retention tuned so you're not paying to store noise. No log servers to run or patch.</span>
               <span class="pkg-price">$1,200</span>
+            </div>
+            <div class="pkg-row">
+              <span class="pkg-name">Cloud Adoption Starter</span>
+              <span class="pkg-desc">Moving to AWS, or cleaning up one messy account? I stand up the landing zone — organization structure, guardrails, and networking, all in Terraform — and land your first workload in it, end to end.</span>
+              <span class="pkg-price">$1,500</span>
             </div>
             <div class="pkg-row">
               <span class="pkg-name">Ongoing DevOps / ClickOps</span>
