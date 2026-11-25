@@ -72,6 +72,9 @@
   figure.portrait img {
     width: 100%; max-width: 300px; border-radius: 8px; display: block;
     border: 1px solid var(--rule);
+    /* the photo is square — pin the box to square and let the image
+       cover it, so no browser can stretch it */
+    height: auto; aspect-ratio: 1 / 1; object-fit: cover;
   }
   figure.portrait figcaption { font-size: 14px; color: var(--ink-soft); margin-top: 10px; font-style: italic; }
 
