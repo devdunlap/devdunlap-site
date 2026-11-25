@@ -1,0 +1,6 @@
+# Terraform working files and state — never commit state or tfvars.
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+*.tfplan
