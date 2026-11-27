@@ -22,6 +22,23 @@ resource "cloudflare_pages_project" "site" {
   production_branch = "main"
 }
 
+# The two blue-green slots. Each colour has its own Pages project that
+# always serves that colour's latest push, so a version can be reviewed
+# live before it is promoted. Production above serves whichever colour
+# var.active_slot names (see active_slot.tf); the deploy workflow does
+# the copying.
+resource "cloudflare_pages_project" "blue" {
+  account_id        = var.account_id
+  name              = "devdunlap-site-blue"
+  production_branch = "main"
+}
+
+resource "cloudflare_pages_project" "green" {
+  account_id        = var.account_id
+  name              = "devdunlap-site-green"
+  production_branch = "main"
+}
+
 # Attaches the custom domain to the Pages project. Cloudflare issues the
 # certificate automatically once the domain validates.
 resource "cloudflare_pages_domain" "site" {
