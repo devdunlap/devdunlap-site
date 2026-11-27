@@ -31,9 +31,7 @@ Run the site checks locally with the same command CI uses:
 python3 scripts/check_site.py
 ```
 
-## Deploy
-
-## Deploy — blue-green
+## Deploy — blue-green, automatic on push
 
 Each colour has its own Cloudflare Pages project (its slot), and
 production is a third:
@@ -44,23 +42,38 @@ production is a third:
 | Green | `green/` | `devdunlap-site-green` | https://devdunlap-site-green.pages.dev |
 | Production | — | `devdunlap-site` | https://devdunlap.site |
 
-Deploys are manual on purpose, from the Actions tab, using the
-**Blue-Green Deploy** workflow (`.github/workflows/blue-green.yml`):
+Pushing to `main` is the launch — `.github/workflows/deploy.yml` runs
+the checks, then:
 
-- **deploy-slot** ships one colour's folder to its own slot project and
-  smoke-tests the slot URL.
-- **promote** copies that colour's folder into the production project —
-  that copy is the traffic switch. Rollback is promoting the other
-  colour back.
+- A colour whose folder changed ships to its own slot project and is
+  smoke-tested on its slot URL.
+- Production serves whichever colour **the switch** names: the
+  `active_slot` variable in `infra/active_slot.tf` (Terraform). If the
+  switch changed, or the active colour's folder changed, that colour
+  is copied into the production project — that copy is the traffic
+  switch — and https://devdunlap.site is smoke-tested.
 
-Nothing deploys on push; every move is a deliberate button press, which
-is the point of the demo. Requires the repository secrets
-`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+So the everyday moves are just edits plus a push:
+
+- **Tweak a design** — edit its folder, push. Its slot updates;
+  production is untouched.
+- **Take green live** — set `active_slot` to `"green"` in
+  `infra/active_slot.tf`, push.
+- **Roll back** — set it back to `"blue"`, push.
+
+The **Blue-Green Deploy** workflow (`.github/workflows/blue-green.yml`)
+remains as a manual override from the Actions tab — deploy one slot,
+or promote a colour without a code change. Requires the repository
+secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
 ## Infrastructure as code
 
-`infra/` holds the Terraform for the Cloudflare Pages project, the
-custom domain, the apex DNS record, and zone security settings. The
-resources predate the code (created via the API at first deploy), so
-the config documents the import-first adoption path — see
-`infra/README.md`. CI validates the code; it does not plan or apply.
+`infra/` holds the Terraform for the Cloudflare Pages projects (the
+production project plus the blue and green slot projects), the
+custom domain, the apex DNS record, and zone security settings. It
+also holds the deployment switch: `active_slot` in
+`infra/active_slot.tf` names the colour production serves, and the
+deploy workflow reads it on every push. The resources predate the
+code (created via the API at first deploy), so the config documents
+the import-first adoption path — see `infra/README.md`. CI validates
+the code; it does not plan or apply.
