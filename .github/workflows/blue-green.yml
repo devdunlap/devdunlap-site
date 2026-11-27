@@ -1,7 +1,12 @@
 name: Blue-Green Deploy
 
-# Blue-green deployment for devdunlap.site, run by hand from the
-# Actions tab. Two versions of the site live in this repo:
+# Blue-green deployment for devdunlap.site — the MANUAL override.
+# Everyday deploys are automatic: deploy.yml ships on every push to
+# main and promotes whichever colour var.active_slot names in
+# infra/active_slot.tf. This workflow is for the deliberate moves:
+# deploying one slot, or promoting a colour, without a code change.
+#
+# Two versions of the site live in this repo:
 #
 #   blue/   the original dark "Ops Console" design
 #   green/  the editorial redesign
@@ -14,8 +19,7 @@ name: Blue-Green Deploy
 # Production (devdunlap.site) is a third project, devdunlap-site.
 # "Promoting" a colour copies that colour's files into production —
 # that copy is the traffic switch. Rollback is promoting the other
-# colour back. Nothing here deploys on push; every move is a
-# deliberate button press, which is the point of the demo.
+# colour back.
 #
 # Needs repository secrets CLOUDFLARE_API_TOKEN and
 # CLOUDFLARE_ACCOUNT_ID (already configured for the CI workflow).

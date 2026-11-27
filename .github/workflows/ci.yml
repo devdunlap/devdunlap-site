@@ -5,7 +5,9 @@ name: CI
 #                     hygiene and a page-weight budget (scripts/check_site.py)
 #   2. terraform    — the Cloudflare infrastructure as code is formatted
 #                     and valid (infra/)
-#   Deployments live in blue-green.yml (manual, slot-based).
+#   Deployments live in deploy.yml (automatic on push; the colour
+#   production serves is var.active_slot in infra/active_slot.tf).
+#   blue-green.yml remains as a manual override.
 
 on:
   push:

@@ -1,0 +1,261 @@
+name: Deploy
+
+# Push-to-deploy for devdunlap.site. No buttons: pushing to main is
+# the launch.
+#
+# What a push does, in order:
+#   1. checks       the same gates CI runs (site checks, Terraform
+#                   fmt/validate). A red gate stops everything.
+#   2. changes      works out what the push touched and reads the
+#                   blue/green switch: var.active_slot's default in
+#                   infra/active_slot.tf.
+#   3. deploy-blue / deploy-green
+#                   a colour whose folder changed ships to its own
+#                   slot project and is smoke-tested on its slot URL.
+#   4. promote      if the switch changed, or the ACTIVE colour's
+#                   folder changed, that colour is copied into the
+#                   production project and devdunlap.site is
+#                   smoke-tested. That copy is the traffic switch.
+#
+# So the everyday moves are just edits + push:
+#   - Tweak the green design  -> edit green/, push. Green slot updates;
+#     production is untouched.
+#   - Take green live         -> set active_slot to "green" in
+#     infra/active_slot.tf, push. Green is promoted to production.
+#   - Roll back               -> set it back to "blue", push.
+#
+# The manual Blue-Green Deploy workflow still exists as an override
+# (deploy one slot, or promote a colour without a code change).
+#
+# Needs repository secrets CLOUDFLARE_API_TOKEN and
+# CLOUDFLARE_ACCOUNT_ID (already configured).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "Colour to promote to production (manual override)"
+        type: choice
+        options:
+          - active
+          - blue
+          - green
+        default: active
+
+permissions:
+  contents: read
+
+# Deploys queue up; a deploy is never cancelled halfway through.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    name: Checks (gate)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Run site checks
+        run: python3 scripts/check_site.py
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: Terraform format check and validate
+        working-directory: infra
+        run: |
+          terraform fmt -check -diff -recursive
+          terraform init -backend=false
+          terraform validate
+
+  changes:
+    name: Work out what changed
+    needs: checks
+    runs-on: ubuntu-latest
+    outputs:
+      blue_changed: ${{ steps.diff.outputs.blue_changed }}
+      green_changed: ${{ steps.diff.outputs.green_changed }}
+      promote: ${{ steps.diff.outputs.promote }}
+      promote_slot: ${{ steps.diff.outputs.promote_slot }}
+    steps:
+      - name: Check out the repository (full history for the diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Diff the push and read the switch
+        id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
+          OVERRIDE: ${{ inputs.slot }}
+        run: |
+          # The switch: the default of var.active_slot in Terraform.
+          ACTIVE=$(grep -E '^[[:space:]]*default[[:space:]]*=' infra/active_slot.tf | head -n 1 | sed -E 's/.*"(blue|green)".*/\1/')
+          if [ "$ACTIVE" != "blue" ] && [ "$ACTIVE" != "green" ]; then
+            echo "Could not read active_slot (got '$ACTIVE') from infra/active_slot.tf"
+            exit 1
+          fi
+          echo "Active slot (Terraform): $ACTIVE"
+
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            # A manual run re-deploys both slots and promotes.
+            BLUE=true; GREEN=true; SWITCH=true
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            # No parent to diff against (first push): do everything.
+            BLUE=true; GREEN=true; SWITCH=true
+          else
+            FILES=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
+            echo "Changed files:"; echo "$FILES"
+            BLUE=false; GREEN=false; SWITCH=false
+            grep -q '^blue/'            <<< "$FILES" && BLUE=true
+            grep -q '^green/'           <<< "$FILES" && GREEN=true
+            grep -q '^infra/active_slot\.tf$' <<< "$FILES" && SWITCH=true
+          fi
+
+          # Promote when the switch flipped, when the active colour's
+          # content changed, or on any manual run.
+          PROMOTE=false
+          [ "$SWITCH" = "true" ] && PROMOTE=true
+          [ "$ACTIVE" = "blue" ]  && [ "$BLUE"  = "true" ] && PROMOTE=true
+          [ "$ACTIVE" = "green" ] && [ "$GREEN" = "true" ] && PROMOTE=true
+          [ "$EVENT" = "workflow_dispatch" ] && PROMOTE=true
+
+          # A manual run may name the colour to promote; anything else
+          # promotes whatever the switch says.
+          PROMOTE_SLOT="$ACTIVE"
+          if [ "$EVENT" = "workflow_dispatch" ] && { [ "$OVERRIDE" = "blue" ] || [ "$OVERRIDE" = "green" ]; }; then
+            PROMOTE_SLOT="$OVERRIDE"
+          fi
+
+          echo "blue_changed=$BLUE"     >> "$GITHUB_OUTPUT"
+          echo "green_changed=$GREEN"   >> "$GITHUB_OUTPUT"
+          echo "promote=$PROMOTE"       >> "$GITHUB_OUTPUT"
+          echo "promote_slot=$PROMOTE_SLOT" >> "$GITHUB_OUTPUT"
+          echo "Plan: blue=$BLUE green=$GREEN promote=$PROMOTE (slot: $PROMOTE_SLOT)"
+
+  deploy-blue:
+    name: Deploy blue slot
+    needs: changes
+    if: needs.changes.outputs.blue_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Stage the blue files
+        run: |
+          mkdir -p dist
+          cp -r blue/. dist/
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=devdunlap-site-blue --branch=main
+
+      - name: Smoke test the blue slot
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS "https://devdunlap-site-blue.pages.dev/" | grep -q "Ops Console"; then
+              echo "Smoke test passed: blue slot is serving the blue version."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Smoke test failed: blue content not found on the blue slot."
+          exit 1
+
+  deploy-green:
+    name: Deploy green slot
+    needs: changes
+    if: needs.changes.outputs.green_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Stage the green files
+        run: |
+          mkdir -p dist
+          cp -r green/. dist/
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=devdunlap-site-green --branch=main
+
+      - name: Smoke test the green slot
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS "https://devdunlap-site-green.pages.dev/" | grep -q "keep production systems up"; then
+              echo "Smoke test passed: green slot is serving the green version."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Smoke test failed: green content not found on the green slot."
+          exit 1
+
+  promote:
+    name: Promote ${{ needs.changes.outputs.promote_slot }} to production
+    needs: [changes, deploy-blue, deploy-green]
+    if: >-
+      always() &&
+      needs.changes.result == 'success' &&
+      needs.changes.outputs.promote == 'true' &&
+      (needs.deploy-blue.result == 'success' || needs.deploy-blue.result == 'skipped') &&
+      (needs.deploy-green.result == 'success' || needs.deploy-green.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Resolve the smoke-test text for the promoted colour
+        id: cfg
+        env:
+          SLOT: ${{ needs.changes.outputs.promote_slot }}
+        run: |
+          case "$SLOT" in
+            blue)  SMOKE_TEXT="Ops Console" ;;
+            green) SMOKE_TEXT="keep production systems up" ;;
+          esac
+          echo "smoke=$SMOKE_TEXT" >> "$GITHUB_OUTPUT"
+          echo "Promoting $SLOT to production (smoke text: $SMOKE_TEXT)"
+
+      - name: Stage the promoted colour's files
+        env:
+          SLOT: ${{ needs.changes.outputs.promote_slot }}
+        run: |
+          mkdir -p dist
+          cp -r "$SLOT/." dist/
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=devdunlap-site --branch=main
+
+      - name: Smoke test production
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS "https://devdunlap.site/" | grep -q "${{ steps.cfg.outputs.smoke }}"; then
+              echo "Smoke test passed: devdunlap.site is serving the ${{ needs.changes.outputs.promote_slot }} version."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Smoke test failed: expected content not found at https://devdunlap.site/"
+          exit 1
