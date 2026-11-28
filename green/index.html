@@ -139,6 +139,89 @@
   footer a { color: var(--ink-soft); }
   .slot { font-weight: 600; color: var(--green-dark); }
 
+  /* cinematic upgrade — same drama as the demo piece, kept editorial:
+     oversized serif hero, gradient pill buttons, a dark band for the
+     demo, gradient step numerals, and a proper FAQ */
+  :root {
+    --grad: linear-gradient(92deg, #14503a 0%, #1d6a4a 52%, #5da465 100%);
+    --band: #131711;
+  }
+  .btn { border-radius: 999px; }
+  .btn-solid { background: var(--grad); }
+  .btn-solid:hover { background: var(--grad); filter: brightness(1.1); color: #fff; }
+  .hero h1 { font-size: clamp(40px, 6.6vw, 84px); line-height: 1.05; letter-spacing: -0.01em; }
+  .price-row { transition: background .2s ease; }
+  .price-row:hover { background: #f4efe2; }
+  .steps h3 .n {
+    font-size: 26px; display: inline-block;
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* outcomes — benefit cards */
+  .outs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+  .out-card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 22px 22px 20px; }
+  .out-card h3 { font-size: 20px; margin: 0 0 8px; }
+  .out-card p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
+
+  /* the dark cinematic band — home of the live demo */
+  .band {
+    position: relative; overflow: hidden; border-radius: 14px; color: #f3f0e6;
+    background:
+      radial-gradient(560px 300px at 88% -10%, rgba(93,164,101,.35), transparent 60%),
+      radial-gradient(700px 380px at -10% 110%, rgba(20,80,58,.55), transparent 60%),
+      var(--band);
+    padding: 52px 46px 46px;
+  }
+  .band .kicker { color: #9fc7a8; }
+  .band h2 { color: #f7f4ea; font-size: clamp(30px, 4.6vw, 48px); }
+  .band-sub { color: #c9cdbf; max-width: 42em; margin: 0 0 8px; }
+  .band-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 30px 0 34px; }
+  .band-card { border: 1px solid rgba(243,240,230,.16); border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.03); }
+  .band-card .art { height: 76px; }
+  .band-card .art-a { background: radial-gradient(140px 70px at 20% 0%, rgba(255,196,86,.5), transparent 70%), linear-gradient(120deg, #1d6a4a, #131711); }
+  .band-card .art-b { background: radial-gradient(140px 70px at 85% 0%, rgba(93,164,101,.55), transparent 70%), linear-gradient(120deg, #131711, #14503a); }
+  .band-card .art-c { background: radial-gradient(140px 70px at 50% 110%, rgba(240,180,90,.45), transparent 70%), linear-gradient(120deg, #14503a, #1d6a4a); }
+  .band-card .cbody { padding: 14px 16px 16px; }
+  .band-card h3 { font-size: 17px; margin: 0 0 5px; color: #f7f4ea; }
+  .band-card p { margin: 0; font-size: 14px; color: #c9cdbf; line-height: 1.55; }
+  .btn-grad { background: var(--grad); color: #fff; box-shadow: 0 10px 28px rgba(20,80,58,.45); }
+  .btn-grad:hover { color: #fff; filter: brightness(1.12); }
+  .band-note { margin: 18px 0 0; font-size: 14px; color: #9aa08d; max-width: 44em; }
+
+  /* faq */
+  .faq-list { margin-top: 14px; border-top: 1px solid var(--rule); }
+  .faq-list details { border-bottom: 1px solid var(--rule); }
+  .faq-list summary {
+    cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 18px 2px; min-height: 48px;
+    font-family: "Fraunces", Georgia, serif; font-size: 19px; font-weight: 600;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary .plus {
+    flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--green);
+    display: grid; place-items: center; color: var(--green-dark);
+    font-family: "Inter", sans-serif; font-weight: 400; transition: transform .25s ease;
+  }
+  .faq-list details[open ] summary .plus { transform: rotate(45deg); }
+  .faq-list details p { margin: 0; padding: 0 40px 20px 2px; color: var(--ink-soft); max-width: 46em; }
+
+  /* scroll reveal — JS-only enhancement; content is visible by default
+     and the script only pre-hides below-fold elements it observes */
+  .rvx { opacity: 0; transform: translateY(20px); }
+  .rvx.in { opacity: 1; transform: none; transition: opacity .65s ease, transform .65s ease; }
+
+  @media (max-width: 760px) {
+    .outs { grid-template-columns: 1fr; }
+    .band { padding: 38px 24px 34px; }
+    .band-cards { grid-template-columns: 1fr; }
+    .faq-list details p { padding-right: 2px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rvx { opacity: 1; transform: none; }
+    .rvx.in { transition: none; }
+    .faq-list summary .plus { transition: none; }
+  }
+
   @media (max-width: 760px) {
     .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 38px; }
     figure.portrait img { max-width: 220px; }
@@ -195,6 +278,35 @@
     <span>CI/CD that ships daily</span>
   </div>
 
+  <!-- ======= OUTCOMES ======= -->
+  <section id="outcomes">
+    <p class="kicker">Outcomes</p>
+    <h2>What you&rsquo;re actually buying</h2>
+    <p class="section-intro">Not hours, and not tools. Every engagement &mdash; audit, build, or weekly operations &mdash; is aimed at one of these five, with automation and infrastructure as code as the method underneath.</p>
+    <div class="outs">
+      <div class="out-card">
+        <h3>Ship faster</h3>
+        <p>Pipelines that make releases routine: tests that run, deploys you can roll back, shipping daily instead of ceremonially.</p>
+      </div>
+      <div class="out-card">
+        <h3>Stay up</h3>
+        <p>Logging and monitoring that tell you something&rsquo;s wrong before your customers do &mdash; and a setup that survives one node dying.</p>
+      </div>
+      <div class="out-card">
+        <h3>Spend right</h3>
+        <p>The waste in your AWS bill found and priced: idle resources, oversized instances, storage that should have been archived a year ago.</p>
+      </div>
+      <div class="out-card">
+        <h3>Stay secure</h3>
+        <p>IAM, network exposure, encryption, and logging checked against the baseline I used in regulated banking.</p>
+      </div>
+      <div class="out-card">
+        <h3>Get there</h3>
+        <p>A proper AWS landing zone to grow into &mdash; account structure, guardrails, network, identity &mdash; so the second workload is easier than the first.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ======= WORK ======= -->
   <section id="work">
     <p class="kicker">Selected work</p>
@@ -231,6 +343,40 @@
           <a href="https://github.com/devdunlap/devdunlap-site" target="_blank" rel="noopener">Site source on GitHub</a>
         </p>
       </div>
+    </div>
+  </section>
+
+  <!-- ======= LIVE DEMO BAND ======= -->
+  <section>
+    <div class="band">
+      <p class="kicker">Live demo</p>
+      <h2>A website that moves as you scroll</h2>
+      <p class="band-sub">Alongside the infrastructure work, I build sites in the cinematic, scroll-driven style &mdash; a giant opening frame, a story that unfolds as visitors scroll, and a booking button that&rsquo;s impossible to miss. This demo is an original concept piece, built to show the feel.</p>
+      <div class="band-cards">
+        <div class="band-card">
+          <div class="art art-a"></div>
+          <div class="cbody">
+            <h3>The opening frame</h3>
+            <p>One strong visual, one clear promise, one button. The first screen does the pitching.</p>
+          </div>
+        </div>
+        <div class="band-card">
+          <div class="art art-b"></div>
+          <div class="cbody">
+            <h3>The scroll story</h3>
+            <p>Content arrives in sequence as visitors scroll, so each screen earns the next one.</p>
+          </div>
+        </div>
+        <div class="band-card">
+          <div class="art art-c"></div>
+          <div class="cbody">
+            <h3>The booking moment</h3>
+            <p>The call to action returns exactly when interest peaks &mdash; easy to find, never pushy.</p>
+          </div>
+        </div>
+      </div>
+      <a class="btn btn-grad" href="https://muse.ai/s/portfolio-demo-piece-xfxp6xmrjxoxb1xt5/rKs6AOJqfAxy_GJWowE1RbMduEOrMGXNnzB4fLzZrd4" target="_blank" rel="noopener">See the live demo</a>
+      <p class="band-note">Every brand and image in the demo is an original concept created for it. Yours would be built around your business.</p>
     </div>
   </section>
 
@@ -295,6 +441,9 @@
     <div class="services-note">
       <p><strong>How the money works:</strong> audits are flat-fee and paid up front. Fixes are either a fixed price we agree in writing, or $60/hr with a cap. No hourly billing that quietly becomes a second mortgage.</p>
     </div>
+    <div class="cta-row" style="margin-top:22px;">
+      <a class="btn btn-solid" href="mailto:dev.dunlap.andrew@gmail.com?subject=Project%20inquiry%20—%20devdunlap.site">Start with a $650 check</a>
+    </div>
   </section>
 
   <!-- ======= HOW IT WORKS ======= -->
@@ -325,6 +474,34 @@
     <p>On the side I&rsquo;m building toward forward deployed engineering &mdash; the customer-embedded kind of role where you ship working software into real operations instead of handing over a report. The <strong>Dev Dunny</strong> channel (new videos Tuesday and Friday) is where I document that build, including this site.</p>
   </section>
 
+  <!-- ======= FAQ ======= -->
+  <section id="faq">
+    <p class="kicker">Questions</p>
+    <h2>Before you ask</h2>
+    <div class="faq-list">
+      <details>
+        <summary>How do we start?<span class="plus">+</span></summary>
+        <p>Pick the $650 check that matches your worry &mdash; cost, security, or reliability &mdash; and email me. The first conversation is a working session, not a sales call: you&rsquo;ll leave with a clear read on your system either way.</p>
+      </details>
+      <details>
+        <summary>What does a check actually get me?<span class="plus">+</span></summary>
+        <p>A written report: what I found, what it&rsquo;s costing you, and what I&rsquo;d fix first, in priority order &mdash; whether you hire me for the fix or not.</p>
+      </details>
+      <details>
+        <summary>Fixed price or hourly?<span class="plus">+</span></summary>
+        <p>Audits are flat-fee and paid up front. Fixes are either a fixed price we agree in writing, or $60/hr with a cap &mdash; no hourly billing that quietly becomes a second mortgage.</p>
+      </details>
+      <details>
+        <summary>Will my team be able to run it without you?<span class="plus">+</span></summary>
+        <p>That&rsquo;s the point of the handover: everything ships with notes your team can follow at 3 a.m. without me. If you&rsquo;d rather I stay on, the weekly DevOps / ClickOps option covers it.</p>
+      </details>
+      <details>
+        <summary>Do you only work with Dallas businesses?<span class="plus">+</span></summary>
+        <p>I&rsquo;m based in Dallas and work remotely with teams elsewhere. You can hire me through Upwork or directly by email &mdash; whichever your process prefers.</p>
+      </details>
+    </div>
+  </section>
+
   <!-- ======= CONTACT ======= -->
   <section id="contact" class="contact">
     <p class="kicker">Contact</p>
@@ -347,5 +524,29 @@
   </footer>
 
 </div>
+<script>
+  (function () {
+    "use strict";
+    /* Scroll reveal: a progressive enhancement only. Content is visible
+       by default; this script pre-hides only below-fold elements it is
+       actively observing, and reveals everything as a fallback. */
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !("IntersectionObserver" in window)) return;
+    var els = Array.prototype.slice.call(document.querySelectorAll("section, .facts, .hero"));
+    var io;
+    try {
+      io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
+    } catch (err) { return; }
+    var vh = window.innerHeight || 800;
+    els.forEach(function (el) {
+      if (el.getBoundingClientRect().top > vh * 0.9) { el.classList.add("rvx"); io.observe(el); }
+    });
+    setTimeout(function () { els.forEach(function (el) { el.classList.add("in"); }); }, 6000);
+  })();
+</script>
 </body>
 </html>
