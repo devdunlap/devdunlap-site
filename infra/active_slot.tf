@@ -12,7 +12,7 @@
 variable "active_slot" {
   description = "Which colour production serves: \"blue\" (Ops Console) or \"green\" (editorial redesign)."
   type        = string
-  default     = "blue"
+  default     = "green"
 
   validation {
     condition     = contains(["blue", "green"], var.active_slot)
